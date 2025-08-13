@@ -1,0 +1,18 @@
+// db.js
+const mongoose = require('mongoose');
+
+mongoose.connect('mongodb://localhost:27017/markaz-al-mahfaza');
+
+const db = mongoose.connection;
+
+// On success
+db.once('open', () => {
+  console.log('✅ MongoDB connected successfully');
+});
+
+// On error
+db.on('error', (err) => {
+  console.error('❌ MongoDB connection error:', err);
+});
+
+module.exports = mongoose;
