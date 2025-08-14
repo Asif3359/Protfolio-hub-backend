@@ -17,8 +17,8 @@ curl -X POST http://localhost:3000/api/auth/signup \
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "asifahammed359@gmail.com",
-    "password": "404asif404",
+    "email": "22234103359@cse.bubt.edu.bd",
+    "password": "12345678",
     "rememberMe": true
   }'
 ```
@@ -86,7 +86,7 @@ curl -X GET http://localhost:3000/api/user \
 #### 1. Create Project
 ```bash
 curl -X POST http://localhost:3000/api/projects \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjg5Y2M1OTZmOTgxOTlmOGQyOTVlMWE2Iiwicm9sZSI6ImN1c3RvbWVyIn0sImlhdCI6MTc1NTE0NzExOSwiZXhwIjoxNzU3NzM5MTE5fQ.BDsEEiyGYci3Q45llWluxRXVFsYwrAvUc44BgToJdYQ" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "My New Project",
@@ -100,19 +100,19 @@ curl -X POST http://localhost:3000/api/projects \
 #### 2. Get All Projects
 ```bash
 curl -X GET http://localhost:3000/api/projects \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjg5Y2M1OTZmOTgxOTlmOGQyOTVlMWE2Iiwicm9sZSI6ImN1c3RvbWVyIn0sImlhdCI6MTc1NTE0NzExOSwiZXhwIjoxNzU3NzM5MTE5fQ.BDsEEiyGYci3Q45llWluxRXVFsYwrAvUc44BgToJdYQ"
 ```
 
 #### 3. Get Single Project
 ```bash
-curl -X GET http://localhost:3000/api/projects/PROJECT_ID \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+curl -X GET http://localhost:3000/api/projects/689d6d1f173c6ae60ffa5a04 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjg5Y2M1OTZmOTgxOTlmOGQyOTVlMWE2Iiwicm9sZSI6ImN1c3RvbWVyIn0sImlhdCI6MTc1NTE0NzExOSwiZXhwIjoxNzU3NzM5MTE5fQ.BDsEEiyGYci3Q45llWluxRXVFsYwrAvUc44BgToJdYQ"
 ```
 
 #### 4. Update Project
 ```bash
-curl -X PUT http://localhost:3000/api/projects/PROJECT_ID \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+curl -X PUT http://localhost:3000/api/projects/689d6d1f173c6ae60ffa5a04 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjg5Y2M1OTZmOTgxOTlmOGQyOTVlMWE2Iiwicm9sZSI6ImN1c3RvbWVyIn0sImlhdCI6MTc1NTE0NzExOSwiZXhwIjoxNzU3NzM5MTE5fQ.BDsEEiyGYci3Q45llWluxRXVFsYwrAvUc44BgToJdYQ" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Updated Project Title",

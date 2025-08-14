@@ -10,7 +10,8 @@ var verificationRoutes = require("./routes/verificationRoutes");
 var indexRouter = require("./routes/index");
 var authRouter = require("./routes/auth");
 var helthRouter = require("./routes/helth");
-var userRouter = require('./routes/user')
+var userRouter = require("./routes/user");
+var projectRouter = require("./routes/project");
 
 var swaggerUi = require("swagger-ui-express");
 var swaggerSpec = require("./swagger");
@@ -38,6 +39,7 @@ app.use("/", indexRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/helth", helthRouter);
 app.use("/api/user", userRouter);
+app.use("/api/projects", projectRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

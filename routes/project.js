@@ -1,7 +1,7 @@
 // routes/projectRoutes.js
 const express = require('express');
 const router = express.Router();
-const Project = require('../models/Project');
+const Project = require('../model/Project');
 const { body, validationResult } = require('express-validator');
 
 // Middleware to check if user is authenticated
