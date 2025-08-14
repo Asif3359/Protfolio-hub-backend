@@ -9,10 +9,6 @@ const ProfileSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    fullName: {
-      type: String,
-      trim: true,
-    },
     headline: {
       type: String,
       trim: true,
