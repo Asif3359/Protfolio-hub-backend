@@ -14,7 +14,11 @@ var userRouter = require("./routes/user");
 var projectRouter = require("./routes/project");
 var profileRouter = require("./routes/profile");
 var experienceRouter = require("./routes/experience");
-var educationRoute = require("./routes/education");
+var educationRouter = require("./routes/education");
+var certificationRouter = require("./routes/Certification");
+var achievementRouter = require("./routes/achievement");
+var researchRouter = require("./routes/research");
+var skillRouter = require("./routes/skill");
 
 var swaggerUi = require("swagger-ui-express");
 var swaggerSpec = require("./swagger");
@@ -45,7 +49,12 @@ app.use("/api/user", userRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/experience",experienceRouter);
-app.use("/api/education",educationRoute);
+app.use("/api/education",educationRouter);
+app.use("/api/certification",certificationRouter)
+app.use("/api/achievement", achievementRouter);
+app.use("/api/research",researchRouter);
+app.use("/api/skill",skillRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

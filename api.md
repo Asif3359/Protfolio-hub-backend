@@ -18,7 +18,7 @@ curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "22234103359@cse.bubt.edu.bd",
-    "password": "12345678",
+    "password": "123456",
     "rememberMe": true
   }'
 ```
@@ -139,3 +139,14 @@ curl -v -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"asifahammed359@gmail.com","password":"password123"}'
 ```
+
+
+# Replace <USER_ID> and <VALID_TOKEN> with actual values
+curl -X GET \
+  http://localhost:3000/api/skill/user/689cc596f98199f8d295e1a6/all \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjg5Y2M1OTZmOTgxOTlmOGQyOTVlMWE2Iiwicm9sZSI6ImN1c3RvbWVyIn0sImlhdCI6MTc1NTI4NDM0OCwiZXhwIjoxNzU3ODc2MzQ4fQ.XKADlmVEw2zKgg8acOrBPVbTb3lLQEUUL_UlLX401qY' \
+  -H 'Content-Type: application/json'
+
+  curl -X GET \
+  http://localhost:3000/api/skill/689f7c0c833da957f78d3c0f \
+  -H 'Content-Type: application/json'
