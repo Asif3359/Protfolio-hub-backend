@@ -1,7 +1,7 @@
 // db.js
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/markaz-al-mahfaza');
+mongoose.connect(process.env.MONGO_URI);
 
 const db = mongoose.connection;
 
