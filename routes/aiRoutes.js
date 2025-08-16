@@ -11,7 +11,7 @@ if (typeof globalThis.fetch === 'function') {
 }
 
 // Llama 3 service configuration
-const LLAMA3_SERVICE_URL = process.env.LLAMA3_SERVICE_URL;
+const LLAMA3_SERVICE_URL = process.env.LLAMA3_SERVICE_URL || 'https://ml-generate-q-a-for-skill-test.onrender.com';
 
 // Helper function to make requests to Llama 3 service
 const callLlama3Service = async (endpoint, data = null) => {
