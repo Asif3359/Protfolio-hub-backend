@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 // Connect to MongoDB with database name
-const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/portfolio_hub';
+const mongoURI = process.env.MONGO_URI;
 mongoose.connect(mongoURI);
 
 const db = mongoose.connection;
