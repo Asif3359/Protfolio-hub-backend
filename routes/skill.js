@@ -100,11 +100,16 @@ router.get('/me', authenticate, async (req, res) => {
     const skills = await Skill.find(query)
       .sort({ priority: 1, proficiency: -1 }); // Sort by priority then proficiency
     res.json(skills);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
+      } catch (err) {
+      console.error('Error in generate-questions:', err.message);
+      console.error('Stack trace:', err.stack);
+      res.status(500).json({ 
+        error: 'Server Error', 
+        message: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      });
+    }
+  });
 
 // @route   GET /skill/user/:userId
 // @desc    Get public skills for a user
@@ -274,5 +279,94 @@ router.patch(
     }
   }
 );
+
+// @route   GET /skill/:id/generate-questions
+// @desc    Generate questions for a skill test
+// @access  Private
+router.get('/:id/generate-questions', async (req, res) => {  // Temporarily removed authenticate for testing
+  try {
+    const skill = await Skill.findById(req.params.id);
+
+    if (!skill) {
+      return res.status(404).json({ msg: 'Skill not found' });
+    }
+
+    // Check if user owns the skill or skill is public
+    // For testing, allow access if skill is public or if no user is authenticated
+    if (req.user && skill.userId.toString() !== req.user.id && skill.visibility !== 'Public') {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    // Determine proficiency level based on skill.proficiency
+    let proficiencyLevel;
+  
+    proficiencyLevel = 'Advanced';
+    console.log(proficiencyLevel)
+
+    // Call the ML service to generate questions
+    const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+    
+    // Use node-fetch or https module for older Node.js versions
+    const https = require('https');
+    const http = require('http');
+    
+    const url = new URL(`${mlServiceUrl}/generate-questions`);
+    const postData = JSON.stringify({
+      skill: skill.name,
+      category: skill.category,
+      proficiency: proficiencyLevel,
+      num_questions: parseInt(req.query.num_questions) || 5
+    });
+    
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (url.protocol === 'https:' ? 443 : 80),
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+    
+    const response = await new Promise((resolve, reject) => {
+      const req = (url.protocol === 'https:' ? https : http).request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            statusText: res.statusMessage,
+            json: () => JSON.parse(data)
+          });
+        });
+      });
+      
+      req.on('error', (err) => {
+        reject(err);
+      });
+      
+      req.write(postData);
+      req.end();
+    });
+
+    if (!response.ok) {
+      throw new Error(`ML service error: ${response.statusText}`);
+    }
+
+    const questionsData = await response.json();
+    res.json(questionsData);
+  } catch (err) {
+    console.error('Error in generate-questions:', err.message);
+    console.error('Stack trace:', err.stack);
+    res.status(500).json({ 
+      error: 'Server Error', 
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+});
 
 module.exports = router;

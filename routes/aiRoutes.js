@@ -22,6 +22,8 @@ const callLlama3Service = async (endpoint, data = null) => {
       headers: {
         'Content-Type': 'application/json',
       },
+      // Add timeout for AI requests (2 minutes)
+      signal: AbortSignal.timeout(1200000)
     };
 
     if (data) {

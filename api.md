@@ -148,5 +148,212 @@ curl -X GET \
   -H 'Content-Type: application/json'
 
   curl -X GET \
-  http://localhost:3000/api/skill/689f7c0c833da957f78d3c0f \
+  http://localhost:3000/api/skill/skill/689f7c0c833da957f78d3c0f \
   -H 'Content-Type: application/json'
+
+curl -X GET http://localhost:3000/api/skill/689f7c0c833da957f78d3c0f/generate-questions
+
+  asif-ahammed@asif-ahammed-MS-7E02:~/Project/SDP-4-Protfolio-hub/protfolio-hub$ curl -X GET http://localhost:3000/api/skill/689f7c0c833da957f78d3c0f/generate-questions
+{"skill":"C++","category":"Programming","proficiency":"Beginner","questions":[{"question":"What is a Javascript object?","correct_answer":"A function that stores objects, A way to manipulate variables","incorrect_answers":["None of the above","This is not correct","Incorrect option"]},{"question":"What is a 'normal' code in C++?","correct_answer":"A function that automatically retrieves the code, 'normal' code","incorrect_answers":["None of the above","This is not correct","Incorrect option"]},{"question":"What is a c++ script?","correct_answer":"A type of code that automatically returns a function that is automatically stored","incorrect_answers":["None of the above","This is not correct","Incorrect option"]},{"question":"What is the purpose of ''i'' in C++?","correct_answer":"To create code that is faster than ''i'm using in C++) Correct Answer: To create code that runs smoothly, To handle errors","incorrect_answers":["None of the above","This is not correct","Incorrect option"]},{"question":"What is a good code in C++?","correct_answer":"A technique to write code that can easily edit code and convert code to another function","incorrect_answers":["None of the above","This is not correct","Incorrect option"]}]}asif-ahammed@asif-ahammed-MS-7E02:~/Project/SDP-4-Protfolio-hub/protfolio-hub$
+
+### Testing AI Routes:
+
+#### 1. Check AI Service Health
+```bash
+curl -X GET http://localhost:3000/api/ai/health \
+  -H "Content-Type: application/json"
+```
+
+#### 2. Generate Questions for Single Skill
+```bash
+curl -X POST http://localhost:3000/api/ai/generate-questions -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjg5Y2M1OTZmOTgxOTlmOGQyOTVlMWE2Iiwicm9sZSI6ImN1c3RvbWVyIn0sImlhdCI6MTc1NTMyNTYxNCwiZXhwIjoxNzU3OTE3NjE0fQ.vDxfdkBNepSTm1xWBD99ocLohjIve3eh6f5e3Fk1H6o" -H "Content-Type: application/json" -d '{"skill": "Java", "category": "Programming", "num_questions": 5}' | jq .
+```
+
+#### 3. Generate Questions for Multiple Skills
+```bash
+curl -X POST http://localhost:3000/api/ai/generate-multiple-skills \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjg5Y2M1OTZmOTgxOTlmOGQyOTVlMWE2Iiwicm9sZSI6ImN1c3RvbWVyIn0sImlhdCI6MTc1NTMyNTYxNCwiZXhwIjoxNzU3OTE3NjE0fQ.vDxfdkBNepSTm1xWBD99ocLohjIve3eh6f5e3Fk1H6o" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "skills": [
+      {
+        "skill": "JavaScript",
+        "category": "Programming"
+      },
+      {
+        "skill": "React",
+        "category": "Frontend"
+      },
+      {
+        "skill": "Node.js",
+        "category": "Backend"
+      }
+    ]
+  }'
+```
+
+#### 4. Get Available Skills
+```bash
+curl -X GET http://localhost:3000/api/ai/skills \
+  -H "Content-Type: application/json"
+```
+
+### Example AI Response Format:
+```json
+{
+  "success": true,
+  "message": "Questions generated successfully",
+  "data": {
+    "skill": "JavaScript",
+    "category": "Programming",
+    "questions": [
+      {
+        "question": "What is a closure in JavaScript?",
+        "correct_answer": "A function that has access to variables in its outer scope",
+        "incorrect_answers": [
+          "A way to close browser windows",
+          "A method to end loops",
+          "A type of variable declaration"
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Testing Portfolio Routes:
+
+#### 1. Get All Users' Portfolio Data
+```bash
+curl -X GET http://localhost:3000/api/portfolio/all \
+  -H "Content-Type: application/json"
+```
+
+#### 2. Get Portfolio by User ID
+```bash
+curl -X GET http://localhost:3000/api/portfolio/user/689cc596f98199f8d295e1a6 \
+  -H "Content-Type: application/json"
+```
+
+#### 3. Get Portfolio by Email
+```bash
+curl -X GET http://localhost:3000/api/portfolio/email/22234103359@cse.bubt.edu.bd \
+  -H "Content-Type: application/json"
+```
+
+#### 4. Get Current User's Portfolio (Protected Route)
+```bash
+curl -X GET http://localhost:3000/api/portfolio/me \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjg5Y2M1OTZmOTgxOTlmOGQyOTVlMWE2Iiwicm9sZSI6ImN1c3RvbWVyIn0sImlhdCI6MTc1NTE0NzExOSwiZXhwIjoxNzU3NzM5MTE5fQ.BDsEEiyGYci3Q45llWluxRXVFsYwrAvUc44BgToJdYQ" \
+  -H "Content-Type: application/json"
+```
+
+#### 5. Search Portfolios by Name
+```bash
+curl -X GET "http://localhost:3000/api/portfolio/search?name=asif&limit=5&page=1" \
+  -H "Content-Type: application/json"
+```
+
+#### 6. Search Portfolios by Skill
+```bash
+curl -X GET "http://localhost:3000/api/portfolio/search?skill=javascript&limit=10&page=1" \
+  -H "Content-Type: application/json"
+```
+
+#### 7. Search Portfolios by Name and Skill
+```bash
+curl -X GET "http://localhost:3000/api/portfolio/search?name=asif&skill=react&limit=5&page=1" \
+  -H "Content-Type: application/json"
+```
+
+### Example Portfolio Response Format:
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "user": {
+        "id": "689cc596f98199f8d295e1a6",
+        "name": "Asif Ahammed",
+        "email": "asifahammed359@gmail.com",
+        "verified": true,
+        "role": "customer",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      },
+      "profile": {
+        "headline": "Full Stack Developer",
+        "bio": "Passionate developer with expertise in modern web technologies",
+        "location": "Dhaka, Bangladesh",
+        "phone": "+8801234567890",
+        "website": "https://asifahammed.com",
+        "linkedin": "https://linkedin.com/in/asifahammed",
+        "github": "https://github.com/asifahammed",
+        "portfolioLink": "https://portfolio.asifahammed.com"
+      },
+      "projects": [
+        {
+          "title": "E-commerce Platform",
+          "description": "A full-stack e-commerce application",
+          "technologies": ["React", "Node.js", "MongoDB"],
+          "status": "completed"
+        }
+      ],
+      "experiences": [
+        {
+          "title": "Senior Developer",
+          "company": "Tech Corp",
+          "startDate": "2023-01-01",
+          "endDate": "2024-01-01"
+        }
+      ],
+      "educations": [
+        {
+          "degree": "Bachelor of Computer Science",
+          "institution": "BUBT",
+          "startDate": "2022-01-01",
+          "endDate": "2026-01-01"
+        }
+      ],
+      "certifications": [
+        {
+          "name": "AWS Certified Developer",
+          "issuer": "Amazon Web Services",
+          "issueDate": "2023-06-01"
+        }
+      ],
+      "achievements": [
+        {
+          "title": "Best Developer Award",
+          "description": "Recognized for outstanding contributions",
+          "date": "2023-12-01"
+        }
+      ],
+      "researches": [
+        {
+          "title": "AI in Web Development",
+          "description": "Research on implementing AI in modern web applications",
+          "publicationDate": "2023-08-01"
+        }
+      ],
+      "skills": [
+        {
+          "name": "JavaScript",
+          "category": "Programming",
+          "proficiency": "Advanced"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Portfolio API Features:
+- **Public Access**: Most endpoints are public (no authentication required)
+- **Comprehensive Data**: Returns all user-related information in one request
+- **Search Functionality**: Search by name or skills with pagination
+- **Multiple Lookup Methods**: By user ID, email, or current user
+- **Error Handling**: Proper error messages for invalid requests
+- **Performance Optimized**: Uses concurrent database queries 
+
+

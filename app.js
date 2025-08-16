@@ -19,6 +19,7 @@ var certificationRouter = require("./routes/Certification");
 var achievementRouter = require("./routes/achievement");
 var researchRouter = require("./routes/research");
 var skillRouter = require("./routes/skill");
+var portfolioRouter = require("./routes/protfolio");
 var aiRouter = require("./routes/aiRoutes");
 
 var swaggerUi = require("swagger-ui-express");
@@ -55,6 +56,7 @@ app.use("/api/certification",certificationRouter)
 app.use("/api/achievement", achievementRouter);
 app.use("/api/research",researchRouter);
 app.use("/api/skill",skillRouter);
+app.use("/api/portfolio", portfolioRouter);
 app.use("/api/ai", aiRouter);
 
 
