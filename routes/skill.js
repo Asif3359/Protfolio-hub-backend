@@ -164,7 +164,6 @@ router.put(
   authenticate,
   [
     check('proficiency', 'Proficiency must be between 0-100').optional().isInt({ min: 0, max: 100 }),
-    check('priority', 'Priority must be between 1-5').optional().isInt({ min: 1, max: 5 }),
     check('learningResources', 'Learning resources must be an array').optional().isArray()
   ],
   async (req, res) => {
