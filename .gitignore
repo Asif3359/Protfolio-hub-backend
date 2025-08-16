@@ -298,3 +298,4 @@ celerybeat.pid
 .dmypy.json
 dmypy.json
 .vercel
+/api.md
