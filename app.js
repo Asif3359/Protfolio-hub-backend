@@ -19,6 +19,7 @@ var certificationRouter = require("./routes/Certification");
 var achievementRouter = require("./routes/achievement");
 var researchRouter = require("./routes/research");
 var skillRouter = require("./routes/skill");
+var aiRouter = require("./routes/aiRoutes");
 
 var swaggerUi = require("swagger-ui-express");
 var swaggerSpec = require("./swagger");
@@ -54,6 +55,7 @@ app.use("/api/certification",certificationRouter)
 app.use("/api/achievement", achievementRouter);
 app.use("/api/research",researchRouter);
 app.use("/api/skill",skillRouter);
+app.use("/api/ai", aiRouter);
 
 
 // catch 404 and forward to error handler

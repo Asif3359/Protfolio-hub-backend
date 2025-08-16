@@ -229,3 +229,71 @@ out/
 # package-lock.json  # Keep this file for consistent installs
 yarn.lock
 pnpm-lock.yaml
+
+# ML Service files (separate service)
+ml/
+*.py
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Generated questions and model files
+generated_questions/
+fine_tuned_skill_model/
+# Only exclude generated JSON files, not all JSON files
+ml/*.json
+ml/generated_questions/*.json
+
+# Shell scripts
+*.sh
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
