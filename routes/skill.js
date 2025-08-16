@@ -22,7 +22,6 @@ router.post(
       'Other'
     ]),
     check('proficiency', 'Proficiency must be between 0-100').isInt({ min: 0, max: 100 }),
-    check('priority', 'Priority must be between 1-5').optional().isInt({ min: 1, max: 5 }),
     check('learningResources', 'Learning resources must be an array').optional().isArray(),
     check('visibility', 'Invalid visibility setting').optional().isIn(['Public', 'Private', 'Connections'])
   ],
@@ -41,6 +40,8 @@ router.post(
         priority,
         visibility
       } = req.body;
+
+      console.log(req.body)
 
       const newSkill = new Skill({
         userId: req.user.id,
