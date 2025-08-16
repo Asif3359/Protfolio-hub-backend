@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "bin/www",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "bin/www"
+    },
+    {
+      "src": "/api-docs/(.*)",
+      "dest": "bin/www"
+    },
+    {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "bin/www"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
