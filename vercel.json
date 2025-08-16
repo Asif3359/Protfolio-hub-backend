@@ -23,8 +23,5 @@
       "src": "/(.*)",
       "dest": "bin/www"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
