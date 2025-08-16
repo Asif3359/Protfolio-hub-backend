@@ -11,7 +11,7 @@ if (typeof globalThis.fetch === 'function') {
 }
 
 // Llama 3 service configuration
-const LLAMA3_SERVICE_URL = process.env.LLAMA3_SERVICE_URL || "http://localhost:8002";
+const LLAMA3_SERVICE_URL = process.env.LLAMA3_SERVICE_URL;
 
 // Helper function to make requests to Llama 3 service
 const callLlama3Service = async (endpoint, data = null) => {
@@ -23,7 +23,7 @@ const callLlama3Service = async (endpoint, data = null) => {
         'Content-Type': 'application/json',
       },
       // Add timeout for AI requests (2 minutes)
-      signal: AbortSignal.timeout(1200000)
+      signal: AbortSignal.timeout(120000)
     };
 
     if (data) {
@@ -78,12 +78,17 @@ router.post("/generate-questions", authenticate, async (req, res) => {
       });
     }
 
+    console.log(skill);
     // Call Llama 3 service
     const questions = await callLlama3Service("/generate-questions", {
       skill,
       category,
       num_questions
     });
+
+    console.log(questions)
+
+
 
     res.json({
       success: true,
