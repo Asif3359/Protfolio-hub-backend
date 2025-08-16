@@ -4,9 +4,7 @@ const cors = require('cors');
 
 
 const allowedOrigins = [
-  'http://localhost:3000',
   'http://localhost:3001',
-  'https://protfolio-hub.vercel.app',
   'https://protfolio-hub-frontend.vercel.app'
 ];
 
