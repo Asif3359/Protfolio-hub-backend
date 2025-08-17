@@ -46,13 +46,6 @@ const ExperienceSchema = new mongoose.Schema({
   },
   endDate: {
     type: Date,
-    validate: {
-      validator: function(value) {
-        // End date must be after start date if both exist
-        return !this.startDate || !value || value > this.startDate;
-      },
-      message: 'End date must be after start date'
-    }
   },
   currentlyWorking: {
     type: Boolean,

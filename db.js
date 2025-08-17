@@ -1,7 +1,8 @@
 // db.js
 const mongoose = require('mongoose');
-
+// process.env.MONGO_URI
 // Connect to MongoDB with database name
+// const mongoURI = 'mongodb://localhost:27017/markaz-al-mahfaza'; // Replace 'yourDatabaseName' with your actual database name;
 const mongoURI = process.env.MONGO_URI;
 mongoose.connect(mongoURI);
 

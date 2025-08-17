@@ -66,7 +66,6 @@ router.post(
       "Apprenticeship",
       "Seasonal",
     ]),
-    check("endDate", "Invalid date format").optional().isISO8601().toDate(),
     check("description", "Description too long")
       .optional()
       .isLength({ max: 2000 }),
