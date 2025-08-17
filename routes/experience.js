@@ -185,18 +185,6 @@ router.put(
         "Apprenticeship",
         "Seasonal",
       ]),
-    check("endDate", "End date must be after start date")
-      .optional()
-      .custom((value, { req }) => {
-        if (
-          req.body.startDate &&
-          value &&
-          new Date(value) <= new Date(req.body.startDate)
-        ) {
-          throw new Error("End date must be after start date");
-        }
-        return true;
-      }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
