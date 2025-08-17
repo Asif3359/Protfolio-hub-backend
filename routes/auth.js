@@ -504,9 +504,9 @@ router.post("/check-verification", async (req, res) => {
 
     // Check verification status
     if (user.verified) {
-      return res.status(200).json({ verified: true, message: "Email is verified" });
+      return res.status(200).json({ verified: true, user: user, message: "Email is verified" });
     } else {
-      return res.status(200).json({ verified: false, message: "Email is not verified" });
+      return res.status(200).json({ verified: false, user:user, message: "Email is not verified" });
     }
     
   } catch (err) {
