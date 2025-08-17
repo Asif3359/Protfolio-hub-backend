@@ -115,6 +115,31 @@ router.get("/user/:user_id", async (req, res) => {
   }
 });
 
+// @route   PUT /profile/views/:user_id
+// @desc    Increment profile views count
+// @access  Public
+router.put("/views/:user_id", async (req, res) => {
+  try {
+    const profile = await Profile.findOneAndUpdate(
+      { userId: req.params.user_id },
+      { $inc: { views: 1 } },
+      { new: true }
+    );
+
+    if (!profile) {
+      return res.status(404).json({ msg: "Profile not found" });
+    }
+
+    res.json({ views: profile.views });
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind == "ObjectId") {
+      return res.status(404).json({ msg: "Profile not found" });
+    }
+    res.status(500).send("Server Error");
+  }
+});
+
 // @route   DELETE /profile
 // @desc    Delete profile
 // @access  Private
