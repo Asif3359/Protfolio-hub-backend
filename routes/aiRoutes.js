@@ -78,7 +78,7 @@ router.post("/generate-questions", authenticate, async (req, res) => {
       });
     }
 
-    console.log(skill);
+    // console.log(skill); 
     // Call Llama 3 service
     const questions = await callLlama3Service("/generate-questions", {
       skill,
@@ -86,7 +86,7 @@ router.post("/generate-questions", authenticate, async (req, res) => {
       num_questions
     });
 
-    console.log(questions)
+    // console.log(questions)
 
 
 

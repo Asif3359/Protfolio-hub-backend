@@ -220,7 +220,7 @@ router.put(
         visible,
       } = req.body;
 
-      console.log(skills);
+      // console.log(skills);  
 
       // Process skills - handle both array and comma-separated string
       let processedSkills = [];

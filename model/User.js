@@ -57,6 +57,18 @@ const UserSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    lastLoginAt: {
+      type: Date,
+      default: Date.now,
+    },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    lastSeenAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     versionKey: false,

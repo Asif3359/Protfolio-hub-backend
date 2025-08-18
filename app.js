@@ -20,11 +20,11 @@ var achievementRouter = require("./routes/achievement");
 var researchRouter = require("./routes/research");
 var skillRouter = require("./routes/skill");
 var portfolioRouter = require("./routes/protfolio");
-var aiRouter = require("./routes/aiRoutes");
-
+var aiRouter = require("./routes/aiRoutes"); 
+var UserStatusManager = require("./utils/userStatusManager");
 var swaggerUi = require("swagger-ui-express");
 var swaggerSpec = require("./swagger");
-
+var systemRouter = require("./routes/system");
 var app = express();
 
 app.use(corsOptions);
@@ -57,8 +57,17 @@ app.use("/api/achievement", achievementRouter);
 app.use("/api/research",researchRouter);
 app.use("/api/skill",skillRouter);
 app.use("/api/portfolio", portfolioRouter);
-app.use("/api/ai", aiRouter);
+app.use("/api/ai", aiRouter); 
+app.use("/api/system", systemRouter);
 
+// Schedule task to mark inactive users as offline (every 5 minutes)
+setInterval(async () => {
+  try {
+    await UserStatusManager.markInactiveUsersOffline();
+  } catch (err) {
+    console.error('Error in scheduled task:', err);
+  }
+}, 5 * 60 * 1000); // 5 minutes
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

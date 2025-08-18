@@ -1133,7 +1133,7 @@ function saveTrainingData(data, filename = 'training_data.json') {
   }
   
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-  console.log(`Training data saved to ${filePath}`);
+  // console.log(`Training data saved to ${filePath}`);  
 }
 
 // Function to generate more diverse training data

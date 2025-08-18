@@ -33,7 +33,7 @@ router.post(
   ],
   async (req, res) => {
     const errors = validationResult(req);
-    console.log("Errors ",errors)
+    // console.log("Errors ",errors)
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
@@ -58,7 +58,7 @@ router.post(
         visible
       } = req.body;
 
-      console.log(req.body);
+      // console.log(req.body);
 
       const newEdu = new Education({
         userId: req.user.id,
@@ -226,7 +226,7 @@ router.put(
 router.delete('/:id', authenticate, async (req, res) => {
   try {
     const education = await Education.findById(req.params.id);
-    console.log(education);
+    // console.log(education);
 
     if (!education) {
       return res.status(404).json({ msg: 'Education record not found' });

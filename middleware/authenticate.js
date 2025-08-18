@@ -17,14 +17,14 @@ module.exports = async (req, res, next) => {
         message: 'Authentication required' 
       });
     }
-    console.log('JWT Secret:', process.env.JWT_SECRET);
+    // console.log('JWT Secret:', process.env.JWT_SECRET);
     // 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded",decoded)
+    // console.log("Decoded",decoded)
     
     // 3. Find user and attach to request
     const user = await User.findById(decoded.user.id).select('+passwordResetCode +verificationToken');
-    console.log(user)
+    // console.log(user)
     
     if (!user) {
       return res.status(401).json({ 
@@ -42,7 +42,7 @@ module.exports = async (req, res, next) => {
     }
 
     req.user = user;
-    console.log("Ok")
+    // console.log("Ok")
     next();
   } catch (err) {
     console.error('Authentication error:', err.message);

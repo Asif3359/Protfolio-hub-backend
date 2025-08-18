@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const authenticate = require("../middleware/authenticate");
+const UserStatusManager = require("../utils/userStatusManager");
 
 // Input validation middleware
 const validateSignup = [
@@ -180,6 +181,12 @@ router.post("/login", validateLogin, async (req, res) => {
         email: user.email,
       });
     }
+
+    // Update login status and timestamps
+    user.lastLoginAt = new Date();
+    user.isOnline = true;
+    user.lastSeenAt = new Date();
+    await user.save();
 
     // Generate token
     const expiresIn = rememberMe ? "30d" : "1h";
@@ -473,19 +480,179 @@ router.post("/reset-password", async (req, res) => {
 // @route   POST /api/auth/logout
 // @desc    Logout user
 // @access  Private
-router.post("/logout", authenticate, (req, res) => {
-  res.cookie("token", "none", {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true,
-  });
+router.post("/logout", authenticate, async (req, res) => {
+  try {
+    // Update user's online status
+    const user = await User.findById(req.user.id);
+    if (user) {
+      user.isOnline = false;
+      user.lastSeenAt = new Date();
+      await user.save();
+    }
 
-  res.json({
-    success: true,
-    message: "Logged out successfully",
-  });
+    res.cookie("token", "none", {
+      expires: new Date(Date.now() + 10 * 1000),
+      httpOnly: true,
+    });
+
+    res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    console.error("Logout error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error during logout",
+    });
+  }
 });
 
+// @route   POST /api/auth/update-status
+// @desc    Update user's online status and last seen
+// @access  Private
+router.post("/update-status", authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    user.isOnline = true;
+    user.lastSeenAt = new Date();
+    await user.save();
 
+    res.json({
+      success: true,
+      message: "Status updated successfully",
+      data: {
+        isOnline: user.isOnline,
+        lastSeenAt: user.lastSeenAt
+      }
+    });
+  } catch (err) {
+    console.error("Status update error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
+// @route   GET /api/auth/user-status/me
+// @desc    Get current user's online status and last seen
+// @access  Private
+router.get("/user-status/me", authenticate, async (req, res) => {
+  try {
+    const userStatus = await UserStatusManager.getUserStatus(req.user.id);
+    if (!userStatus) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      data: userStatus
+    });
+  } catch (err) {
+    console.error("Get user status error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
+// @route   GET /api/auth/user-status/:userId
+// @desc    Get user's online status and last seen
+// @access  Private
+router.get("/user-status/:userId", authenticate, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const userStatus = await UserStatusManager.getUserStatus(userId);
+    if (!userStatus) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      data: userStatus
+    });
+  } catch (err) {
+    console.error("Get user status error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
+// @route   GET /api/auth/online-users
+// @desc    Get all online users
+// @access  Private (Admin only)
+router.get("/online-users", authenticate, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin only."
+      });
+    }
+
+    const allUsersStatus = await UserStatusManager.getAllUsersStatus();
+    const onlineUsers = allUsersStatus.filter(user => user.status === 'online' || user.status === 'away');
+
+    res.json({
+      success: true,
+      count: onlineUsers.length,
+      data: onlineUsers
+    });
+  } catch (err) {
+    console.error("Get online users error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
+// @route   GET /api/auth/all-users-status
+// @desc    Get all users with their status (Admin only)
+// @access  Private (Admin only)
+router.get("/all-users-status", authenticate, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin only."
+      });
+    }
+
+    const allUsersStatus = await UserStatusManager.getAllUsersStatus();
+
+    res.json({
+      success: true,
+      count: allUsersStatus.length,
+      data: allUsersStatus
+    });
+  } catch (err) {
+    console.error("Get all users status error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
 
 router.post("/check-verification", async (req, res) => {
   try {

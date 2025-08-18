@@ -41,7 +41,7 @@ router.post(
         visibility
       } = req.body;
 
-      console.log(req.body)
+      // console.log(req.body) 
 
       const newSkill = new Skill({
         userId: req.user.id,
@@ -91,8 +91,8 @@ router.get('/me', authenticate, async (req, res) => {
   try {
     const { category, minProficiency, maxProficiency } = req.query;
     const query = { userId: req.user.id };
-    console.log(req.query)
-    console.log(query)
+    // console.log(req.query)
+    // console.log(query)
 
     if (category) query.category = category;
     if (minProficiency) query.proficiency = { ...query.proficiency, $gte: parseInt(minProficiency) };
@@ -301,7 +301,7 @@ router.get('/:id/generate-questions', async (req, res) => {  // Temporarily remo
     let proficiencyLevel;
   
     proficiencyLevel = 'Advanced';
-    console.log(proficiencyLevel)
+    // console.log(proficiencyLevel)
 
     // Call the ML service to generate questions
     const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';

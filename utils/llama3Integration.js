@@ -113,7 +113,7 @@ class Llama3Integration {
             
             await fs.writeFile(trainingDataPath, JSON.stringify(questions, null, 2));
             
-            console.log(`✅ Questions saved to: ${trainingDataPath}`);
+            // console.log(`✅ Questions saved to: ${trainingDataPath}`);
             
             return {
                 success: true,
@@ -138,37 +138,37 @@ if (require.main === module) {
     async function testLlama3Integration() {
         const llama3 = new Llama3Integration();
         
-        console.log('🧪 Testing Llama 3 Integration...');
+        // console.log('🧪 Testing Llama 3 Integration...');
         
         // Check health
         const isHealthy = await llama3.checkHealth();
-        console.log(`Health check: ${isHealthy ? '✅ Healthy' : '❌ Unhealthy'}`);
+        // console.log(`Health check: ${isHealthy ? '✅ Healthy' : '❌ Unhealthy'}`);
         
         if (!isHealthy) {
-            console.log('❌ Llama 3 service is not available. Please start the service first.');
+            // console.log('❌ Llama 3 service is not available. Please start the service first.');
             return;
         }
         
         // Generate questions for a single skill
         try {
-            console.log('\n🔄 Generating questions for JavaScript...');
+            // console.log('\n🔄 Generating questions for JavaScript...');
             const questions = await llama3.generateQuestions('JavaScript', 'Programming', 3);
-            console.log(`✅ Generated ${questions.questions.length} questions for JavaScript`);
+            // console.log(`✅ Generated ${questions.questions.length} questions for JavaScript`);
             
             // Generate questions for multiple skills
-            console.log('\n🔄 Generating questions for multiple skills...');
+            // console.log('\n🔄 Generating questions for multiple skills...');
             const results = await llama3.generateMultipleSkills([
                 { name: 'Python', category: 'Programming' },
                 { name: 'React', category: 'Frontend Development' }
             ], 2);
             
-            console.log('✅ Multiple skills generation results:');
+            //  console.log('✅ Multiple skills generation results:');
             results.forEach(result => {
                 console.log(`  - ${result.skill}: ${result.status} (${result.questions_count || 0} questions)`);
             });
             
         } catch (error) {
-            console.error('❌ Test failed:', error.message);
+            // console.error('❌ Test failed:', error.message);
         }
     }
     
