@@ -21,12 +21,15 @@ var researchRouter = require("./routes/research");
 var skillRouter = require("./routes/skill");
 var portfolioRouter = require("./routes/protfolio");
 var aiRouter = require("./routes/aiRoutes"); 
+var chatRouter = require("./routes/chat");
 var UserStatusManager = require("./utils/userStatusManager");
 var swaggerUi = require("swagger-ui-express");
 var swaggerSpec = require("./swagger");
 var systemRouter = require("./routes/system");
+
 var app = express();
 
+// Enhanced CORS configuration for WebSocket support
 app.use(corsOptions);
 
 // Swagger API docs
@@ -44,6 +47,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+// API Routes
 app.use("/", indexRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/helth", helthRouter);
@@ -58,6 +62,7 @@ app.use("/api/research",researchRouter);
 app.use("/api/skill",skillRouter);
 app.use("/api/portfolio", portfolioRouter);
 app.use("/api/ai", aiRouter); 
+app.use("/api/chat", chatRouter);
 app.use("/api/system", systemRouter);
 
 // Schedule task to mark inactive users as offline (every 5 minutes)

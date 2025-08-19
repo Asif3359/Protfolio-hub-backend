@@ -75,6 +75,99 @@ router.get("/", authenticate, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/user/verified:
+ *   get:
+ *     summary: Get all verified users
+ *     description: Get a list of all verified users (accessible by any authenticated user)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       isOnline:
+ *                         type: boolean
+ *                       lastSeenAt:
+ *                         type: string
+ *                         format: date-time
+ *                       profile:
+ *                         type: object
+ *                         nullable: true
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get("/verified", authenticate, async (req, res) => {
+  try {
+    // Get all verified users with basic info and online status
+    const verifiedUsers = await User.find({ 
+      verified: true 
+    })
+    .select('_id name email isOnline lastSeenAt createdAt')
+    .sort({ name: 1 });
+
+    // Get profiles for verified users
+    const userIds = verifiedUsers.map(user => user._id);
+    const profiles = await Profile.find({ 
+      userId: { $in: userIds } 
+    });
+
+    // Create a map of profiles for quick lookup
+    const profileMap = new Map();
+    profiles.forEach(profile => {
+      profileMap.set(profile.userId.toString(), profile);
+    });
+
+    // Combine user data with profiles
+    const usersWithProfiles = verifiedUsers.map(user => {
+      const userObj = user.toObject();
+      return {
+        _id: userObj._id,
+        name: userObj.name,
+        email: userObj.email,
+        isOnline: userObj.isOnline,
+        lastSeenAt: userObj.lastSeenAt,
+        createdAt: userObj.createdAt,
+        profile: profileMap.get(userObj._id.toString()) || null
+      };
+    });
+
+    res.json({
+      success: true,
+      count: usersWithProfiles.length,
+      data: usersWithProfiles,
+    });
+  } catch (err) {
+    console.error('Get verified users error:', err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
 // @route   GET /api/auth/me
 // @desc    Get current user
 // @access  Private

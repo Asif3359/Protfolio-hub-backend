@@ -17,14 +17,20 @@ module.exports = async (req, res, next) => {
         message: 'Authentication required' 
       });
     }
-    // console.log('JWT Secret:', process.env.JWT_SECRET);
     // 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // console.log("Decoded",decoded)
+
+    // 3. Resolve user id from token (support { user: { id } } or { id })
+    const decodedUserId = (decoded && decoded.user && decoded.user.id) || decoded.id;
+    if (!decodedUserId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid authentication token payload'
+      });
+    }
     
-    // 3. Find user and attach to request
-    const user = await User.findById(decoded.user.id).select('+passwordResetCode +verificationToken');
-    // console.log(user)
+    // 4. Find user and attach to request
+    const user = await User.findById(decodedUserId).select('+passwordResetCode +verificationToken');
     
     if (!user) {
       return res.status(401).json({ 
@@ -33,7 +39,7 @@ module.exports = async (req, res, next) => {
       });
     }
 
-    // 4. Check if user changed password after token was issued
+    // 5. Check if user changed password after token was issued
     if (user.changedPasswordAfter(decoded.iat)) {
       return res.status(401).json({ 
         success: false,
@@ -42,7 +48,6 @@ module.exports = async (req, res, next) => {
     }
 
     req.user = user;
-    // console.log("Ok")
     next();
   } catch (err) {
     console.error('Authentication error:', err.message);
