@@ -23,6 +23,10 @@ const UserSchema = new mongoose.Schema(
       minlength: [6, "Password must be at least 6 characters"],
       select: false, // Never return password in queries
     },
+    profilePicture: {
+      type: String,
+      trim: true,
+    },
     verified: {
       type: Boolean,
       default: false,

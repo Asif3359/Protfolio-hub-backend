@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const Profile = require("../model/Profile");
+const User = require("../model/User");
 const { body, validationResult } = require("express-validator");
 const authenticate = require("../middleware/authenticate");
 
@@ -72,6 +73,7 @@ router.post(
 
     try {
       let profile = await Profile.findOne({ userId: req.user.id });
+      let user = await User.findById(req.user.id);
 
       if (profile) {
         // Update
@@ -86,6 +88,8 @@ router.post(
       // Create
       profile = new Profile(profileFields);
       await profile.save();
+      user.profilePicture = profile.profileImage;
+      await user.save();
       res.json(profile);
     } catch (err) {
       console.error(err.message);

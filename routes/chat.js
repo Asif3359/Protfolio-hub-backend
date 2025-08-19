@@ -3,7 +3,9 @@ const router = express.Router();
 const authenticate = require('../middleware/authenticate');
 const Chat = require('../model/Chat');
 const User = require('../model/User');
+const Profile = require('../model/Profile');
 
+// / Get all chats for the authenticated user
 // Get all chats for the authenticated user
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -15,9 +17,43 @@ router.get('/', authenticate, async (req, res) => {
     .populate('groupAdmin', 'name email')
     .sort({ lastMessage: -1 });
 
+    // Get all unique participant IDs
+    const participantIds = [...new Set(
+      chats.flatMap(chat => chat.participants.map(p => p._id.toString()))
+    )];
+
+    // Fetch profiles for all participants
+    const profiles = await Profile.find({ userId: { $in: participantIds } });
+    const profileMap = new Map();
+    profiles.forEach(profile => {
+      profileMap.set(profile.userId.toString(), profile.profileImage);
+    });
+
+    // Transform the data to include profileImage
+    const transformedChats = chats.map(chat => ({
+      ...chat.toObject(),
+      participants: chat.participants.map(participant => ({
+        _id: participant._id,
+        name: participant.name,
+        email: participant.email,
+        isOnline: participant.isOnline,
+        lastSeenAt: participant.lastSeenAt,
+        profileImage: profileMap.get(participant._id.toString()) || null
+      })),
+      messages: chat.messages.map(message => ({
+        ...message.toObject(),
+        sender: {
+          _id: message.sender._id,
+          name: message.sender.name,
+          email: message.sender.email,
+          profileImage: profileMap.get(message.sender._id.toString()) || null
+        }
+      }))
+    }));
+
     res.json({
       success: true,
-      data: chats
+      data: transformedChats
     });
   } catch (error) {
     console.error('Get chats error:', error);
@@ -27,7 +63,6 @@ router.get('/', authenticate, async (req, res) => {
     });
   }
 });
-
 // Get a specific chat by ID
 router.get('/:chatId', authenticate, async (req, res) => {
   try {
