@@ -3,8 +3,12 @@ const mongoose = require('mongoose');
 // process.env.MONGO_URI
 // Connect to MongoDB with database name
 // const mongoURI = 'mongodb://localhost:27017/markaz-al-mahfaza'; // Replace 'yourDatabaseName' with your actual database name;
-const mongoURI = process.env.MONGO_URI;
-mongoose.connect(mongoURI);
+const mongoURI = process.env.MONGO_URI ;
+
+// Only connect if not already connected
+if (mongoose.connection.readyState === 0) {
+  mongoose.connect(mongoURI);
+}
 
 const db = mongoose.connection;
 

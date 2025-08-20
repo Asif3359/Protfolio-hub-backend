@@ -188,6 +188,77 @@ router.get("/me", authenticate, async (req, res) => {
   }
 });
 
+// @route   GET /api/user/:id
+// @desc    Get user by ID with follow status
+// @access  Private
+router.get("/:id", authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.user.id;
+
+    const user = await User.findById(id)
+      .select("-password")
+      .populate({
+        path: "followers",
+        select: "name email profilePicture verified",
+        options: { limit: 5 } // Show only first 5 followers
+      })
+      .populate({
+        path: "following",
+        select: "name email profilePicture verified",
+        options: { limit: 5 } // Show only first 5 following
+      });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Get current user to check follow status
+    const currentUser = await User.findById(currentUserId);
+    const isFollowing = currentUser ? currentUser.isFollowing(id) : false;
+    const isOwnProfile = currentUserId === id;
+
+    // Get user's profile
+    const profile = await Profile.findOne({ userId: id });
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          profilePicture: user.profilePicture,
+          verified: user.verified,
+          role: user.role,
+          createdAt: user.createdAt,
+          lastLoginAt: user.lastLoginAt,
+          isOnline: user.isOnline,
+          lastSeenAt: user.lastSeenAt,
+          followersCount: user.followersCount,
+          followingCount: user.followingCount,
+          recentFollowers: user.followers,
+          recentFollowing: user.following,
+        },
+        profile,
+        followStatus: {
+          isFollowing,
+          isOwnProfile,
+        },
+      },
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
 // @route   DELETE /api/auth/:id
 // @desc    Delete a user and all related data (admin only)
 // @access  Private/Admin
@@ -257,7 +328,252 @@ router.delete("/:id", authenticate, async (req, res) => {
   }
 });
 
+// @route   POST /api/user/follow/:userId
+// @desc    Follow a user
+// @access  Private
+router.post("/follow/:userId", authenticate, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user.id;
 
+    // Check if user is trying to follow themselves
+    if (currentUserId === userId) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot follow yourself",
+      });
+    }
 
+    // Check if target user exists
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Get current user
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Current user not found",
+      });
+    }
+
+    // Check if already following
+    if (currentUser.isFollowing(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already following this user",
+      });
+    }
+
+    // Follow the user
+    await currentUser.follow(userId);
+    await targetUser.addFollower(currentUserId);
+
+    res.json({
+      success: true,
+      message: "Successfully followed user",
+      data: {
+        following: currentUser.followingCount,
+        followers: targetUser.followersCount,
+      },
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+// @route   DELETE /api/user/unfollow/:userId
+// @desc    Unfollow a user
+// @access  Private
+router.delete("/unfollow/:userId", authenticate, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user.id;
+
+    // Check if user is trying to unfollow themselves
+    if (currentUserId === userId) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot unfollow yourself",
+      });
+    }
+
+    // Check if target user exists
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Get current user
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Current user not found",
+      });
+    }
+
+    // Check if not following
+    if (!currentUser.isFollowing(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "You are not following this user",
+      });
+    }
+
+    // Unfollow the user
+    await currentUser.unfollow(userId);
+    await targetUser.removeFollower(currentUserId);
+
+    res.json({
+      success: true,
+      message: "Successfully unfollowed user",
+      data: {
+        following: currentUser.followingCount,
+        followers: targetUser.followersCount,
+      },
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+// @route   GET /api/user/followers/:userId
+// @desc    Get followers of a user
+// @access  Private
+router.get("/followers/:userId", authenticate, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    const user = await User.findById(userId)
+      .populate({
+        path: "followers",
+        select: "name email profilePicture verified createdAt",
+        options: {
+          limit: parseInt(limit),
+          skip: (parseInt(page) - 1) * parseInt(limit),
+        },
+      })
+      .select("followers");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        followers: user.followers,
+        totalFollowers: user.followersCount,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(user.followersCount / parseInt(limit)),
+      },
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+// @route   GET /api/user/following/:userId
+// @desc    Get users that a user is following
+// @access  Private
+router.get("/following/:userId", authenticate, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    const user = await User.findById(userId)
+      .populate({
+        path: "following",
+        select: "name email profilePicture verified createdAt",
+        options: {
+          limit: parseInt(limit),
+          skip: (parseInt(page) - 1) * parseInt(limit),
+        },
+      })
+      .select("following");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        following: user.following,
+        totalFollowing: user.followingCount,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(user.followingCount / parseInt(limit)),
+      },
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+// @route   GET /api/user/follow-status/:userId
+// @desc    Check if current user is following a specific user
+// @access  Private
+router.get("/follow-status/:userId", authenticate, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user.id;
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Current user not found",
+      });
+    }
+
+    const isFollowing = currentUser.isFollowing(userId);
+
+    res.json({
+      success: true,
+      data: {
+        isFollowing,
+        userId,
+      },
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
 
 module.exports = router;

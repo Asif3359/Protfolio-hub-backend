@@ -73,6 +73,15 @@ const UserSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // Follow/Followers functionality
+    followers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    following: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }]
   },
   {
     versionKey: false,
@@ -80,6 +89,53 @@ const UserSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+// Virtual for followers count
+UserSchema.virtual('followersCount').get(function() {
+  return this.followers ? this.followers.length : 0;
+});
+
+// Virtual for following count
+UserSchema.virtual('followingCount').get(function() {
+  return this.following ? this.following.length : 0;
+});
+
+// Method to follow a user
+UserSchema.methods.follow = async function(userId) {
+  if (!this.following.includes(userId)) {
+    this.following.push(userId);
+    await this.save();
+  }
+  return this;
+};
+
+// Method to unfollow a user
+UserSchema.methods.unfollow = async function(userId) {
+  this.following = this.following.filter(id => !id.equals(userId));
+  await this.save();
+  return this;
+};
+
+// Method to check if following a user
+UserSchema.methods.isFollowing = function(userId) {
+  return this.following.some(id => id.equals(userId));
+};
+
+// Method to add follower
+UserSchema.methods.addFollower = async function(userId) {
+  if (!this.followers.includes(userId)) {
+    this.followers.push(userId);
+    await this.save();
+  }
+  return this;
+};
+
+// Method to remove follower
+UserSchema.methods.removeFollower = async function(userId) {
+  this.followers = this.followers.filter(id => !id.equals(userId));
+  await this.save();
+  return this;
+};
 
 // Corrected method (using UserSchema instead of userSchema)
 UserSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
