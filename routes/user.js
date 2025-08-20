@@ -77,6 +77,121 @@ router.get("/", authenticate, async (req, res) => {
 
 /**
  * @swagger
+ * /api/user/all/users:
+ *   get:
+ *     summary: Get all users with follow/followers data
+ *     description: Get all users with their profiles and follow/followers information
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           verified:
+ *                             type: boolean
+ *                           role:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                           followersCount:
+ *                             type: number
+ *                           followingCount:
+ *                             type: number
+ *                           recentFollowers:
+ *                             type: array
+ *                           recentFollowing:
+ *                             type: array
+ *                       profile:
+ *                         type: object
+ *                         nullable: true
+ *       500:
+ *         description: Server error
+ */
+router.get("/all/users", async (req, res) => {
+  try {
+
+    const results = await User.aggregate([
+      { $project: { password: 0 } },
+      {
+        $lookup: {
+          from: Profile.collection.name,
+          localField: "_id",
+          foreignField: "userId",
+          as: "profile",
+        },
+      },
+      { $addFields: { profile: { $arrayElemAt: ["$profile", 0] } } },
+    ]);
+
+    // Get follow/followers data for each user
+    const usersWithFollowData = await Promise.all(
+      results.map(async (doc) => {
+        const user = await User.findById(doc._id)
+          .populate({
+            path: "followers",
+            select: "name email profilePicture verified",
+            options: { limit: 5 } // Show only first 5 followers
+          })
+          .populate({
+            path: "following",
+            select: "name email profilePicture verified",
+            options: { limit: 5 } // Show only first 5 following
+          });
+
+        return {
+          user: {
+            _id: doc._id,
+            name: doc.name,
+            email: doc.email,
+            verified: doc.verified,
+            role: doc.role,
+            createdAt: doc.createdAt,
+            followersCount: user.followersCount,
+            followingCount: user.followingCount,
+            recentFollowers: user.followers,
+            recentFollowing: user.following,
+          },
+          profile: doc.profile || null,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      count: usersWithFollowData.length,
+      data: usersWithFollowData,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+/**
+ * @swagger
  * /api/user/verified:
  *   get:
  *     summary: Get all verified users
