@@ -23,8 +23,35 @@ const extractFirstJsonFromText = (text) => {
   return text.substring(start, end + 1);
 };
 
-const buildQuestionsPrompt = ({ skill, category, numQuestions }) => {
-  return `Generate ${numQuestions} interview questions about ${skill} (${category}) in JSON format.\nEach question should have:\n- 1 correct answer\n- 3 incorrect answers\nFormat:\n\n{\n  "skill": "${skill}",\n  "category": "${category}",\n  "questions": [\n    {\n      "question": "...",\n      "correct_answer": "...",\n      "incorrect_answers": ["...", "...", "..."]\n    }\n  ]\n}\n\nDo not include proficiency/difficulty levels.\nMake sure the questions are relevant and practical for job interviews.`;
+const buildQuestionsPrompt = ({ skill, category, numQuestions, proficiency }) => {
+  return `Generate ${numQuestions} interview questions about ${skill} (${category}) in strict JSON.
+
+Difficulty policy (use numeric proficiency percentage = ${proficiency || 0}%):
+- If proficiency < 30%, produce intermediate-level questions. if proficiency is increasing then produce hard level questions.
+- Otherwise, produce hard-level questions.
+
+Quality bar for each question:
+- Emphasize realistic scenarios, edge cases, trade-offs, performance, concurrency, security, or subtle behavior — not definitions or trivia.
+- Exactly 1 unambiguously correct answer.
+- Exactly 3 plausible but incorrect distractors based on common misconceptions or near-miss reasoning.
+- Options must be concise, similar in length/tone, and technically precise. Avoid giveaway wording.
+- Do not use options like "All of the above" or "None of the above".
+- Ensure the correct answer is fully correct in modern practice. Distractors must be incorrect in context; at most one may contain a partially true statement, but overall must be wrong.
+
+Output format:
+{
+  "skill": "${skill}",
+  "category": "${category}",
+  "questions": [
+    {
+      "question": "...",
+      "correct_answer": "...",
+      "incorrect_answers": ["...", "...", "..."]
+    }
+  ]
+}
+
+Do not include difficulty labels. Make questions challenging and decision-oriented to reliably differentiate strong candidates.`;
 };
 
 // Groq provider
@@ -144,13 +171,14 @@ const generateQuestionsViaProvider = async ({
   skill,
   category,
   numQuestions,
+  proficiency,
 }) => {
   if (!GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY not set");
   }
-  const prompt = buildQuestionsPrompt({ skill, category, numQuestions });
+  const prompt = buildQuestionsPrompt({ skill, category, numQuestions, proficiency });
   return await groqChatCompletion({ prompt });
-};
+};  
 
 // @route   GET /api/ai/health
 // @desc    Check Llama 3 service health
@@ -184,7 +212,7 @@ router.get("/health", async (req, res) => {
 // @access  Private
 router.post("/generate-questions", authenticate, async (req, res) => {
   try {
-    const { skill, category, num_questions = 10 } = req.body;
+    const { skill, category, proficiency, num_questions = 10 } = req.body;
 
     // Validate input
     if (!skill || !category) {
@@ -198,6 +226,7 @@ router.post("/generate-questions", authenticate, async (req, res) => {
       skill,
       category,
       numQuestions: num_questions,
+      proficiency,
     });
 
     // console.log(questions)
@@ -250,6 +279,7 @@ router.post("/generate-multiple-skills", authenticate, async (req, res) => {
           skill,
           category,
           numQuestions: num_questions || 10,
+          proficiency,
         });
         results.push({ success: true, skill, category, data });
       } catch (err) {
