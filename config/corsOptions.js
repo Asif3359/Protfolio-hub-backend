@@ -11,7 +11,7 @@ const corsOptions = {
       'http://localhost:3001',
       'http://localhost:5173',
       'http://localhost:4173',
-      'https://protfolio-hub.vercel.app',
+      'https://protfolio-hub-backend.onrender.com',
       'https://portfolio-hub-frontend.vercel.app',
       process.env.CLIENT_URL
     ].filter(Boolean);

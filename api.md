@@ -903,3 +903,7 @@ async function healthCheck() {
   return data.data.status === 'healthy';
 }
 ```
+
+
+  export OPENAI_API_KEY='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'
+  curl -sS https://api.openai.com/v1/models -H "Authorization: Bearer $OPENAI_API_KEY"
