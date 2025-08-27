@@ -12,7 +12,7 @@ if (typeof globalThis.fetch === "function") {
 
 // AI provider configuration (Groq only)
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_MODEL = process.env.GROQ_MODEL || "deepseek-r1-distill-llama-70b";
+const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
 // Utilities
 const extractFirstJsonFromText = (text) => {
@@ -102,69 +102,103 @@ const selectSupportedGroqModel = async () => {
   return models[0] || GROQ_MODEL;
 };
 
-const groqChatCompletion = async ({ prompt, modelOverride }) => {
+const groqChatCompletion = async ({ prompt, modelOverride, retryCount = 0 }) => {
   const modelToUse = modelOverride || GROQ_MODEL;
-  const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${GROQ_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: modelToUse,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a helpful assistant that outputs strict JSON when requested.",
-        },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.2,
-      max_tokens: 2048,
-      stream: false,
-      response_format: { type: "json_object" },
-    }),
-    signal: AbortSignal.timeout(120000),
-  });
-  if (!resp.ok) {
-    let bodyText = "";
-    try {
-      bodyText = await resp.text();
-    } catch (_) {}
-    // If model is decommissioned or invalid, try resolving a supported model once
-    if (
-      bodyText &&
-      bodyText.includes("model") &&
-      (bodyText.includes("decommissioned") ||
-        bodyText.includes("not found") ||
-        bodyText.includes("invalid"))
-    ) {
-      const fallbackModel = await selectSupportedGroqModel();
-      if (fallbackModel && fallbackModel !== modelToUse) {
-        return await groqChatCompletion({
-          prompt,
-          modelOverride: fallbackModel,
-        });
+  
+  try {
+    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: modelToUse,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a helpful assistant that outputs strict JSON when requested.",
+          },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 2048,
+        stream: false,
+        response_format: { type: "json_object" },
+      }),
+      signal: AbortSignal.timeout(120000),
+    });
+    
+    if (!resp.ok) {
+      let bodyText = "";
+      try {
+        bodyText = await resp.text();
+      } catch (_) {}
+      
+      // Handle capacity/overload errors with retry logic
+      if (resp.status === 503 || bodyText.includes("over capacity") || bodyText.includes("back off")) {
+        if (retryCount < 3) {
+          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+          console.log(`Groq overloaded, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return await groqChatCompletion({ prompt, modelOverride, retryCount: retryCount + 1 });
+        } else {
+          // Try a different model as last resort
+          const fallbackModel = await selectSupportedGroqModel();
+          if (fallbackModel && fallbackModel !== modelToUse) {
+            console.log(`Trying fallback model: ${fallbackModel}`);
+            return await groqChatCompletion({ prompt, modelOverride: fallbackModel });
+          }
+        }
       }
+      
+      // If model is decommissioned or invalid, try resolving a supported model once
+      if (
+        bodyText &&
+        bodyText.includes("model") &&
+        (bodyText.includes("decommissioned") ||
+          bodyText.includes("not found") ||
+          bodyText.includes("invalid"))
+      ) {
+        const fallbackModel = await selectSupportedGroqModel();
+        if (fallbackModel && fallbackModel !== modelToUse) {
+          return await groqChatCompletion({
+            prompt,
+            modelOverride: fallbackModel,
+          });
+        }
+      }
+      
+      throw new Error(
+        `Groq chat failed: ${resp.status} ${resp.statusText}${
+          bodyText ? ` - ${bodyText}` : ""
+        }`
+      );
     }
-    throw new Error(
-      `Groq chat failed: ${resp.status} ${resp.statusText}${
-        bodyText ? ` - ${bodyText}` : ""
-      }`
-    );
+    
+    const data = await resp.json();
+    const content =
+      (data &&
+        data.choices &&
+        data.choices[0] &&
+        data.choices[0].message &&
+        data.choices[0].message.content) ||
+      "";
+    const jsonText = extractFirstJsonFromText(content);
+    if (!jsonText) throw new Error("No valid JSON found in Groq response");
+    return JSON.parse(jsonText);
+    
+  } catch (error) {
+    // Handle network timeouts and other errors
+    if (error.name === 'AbortError' && retryCount < 2) {
+      const delay = Math.pow(2, retryCount) * 1000;
+      console.log(`Request timeout, retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return await groqChatCompletion({ prompt, modelOverride, retryCount: retryCount + 1 });
+    }
+    throw error;
   }
-  const data = await resp.json();
-  const content =
-    (data &&
-      data.choices &&
-      data.choices[0] &&
-      data.choices[0].message &&
-      data.choices[0].message.content) ||
-    "";
-  const jsonText = extractFirstJsonFromText(content);
-  if (!jsonText) throw new Error("No valid JSON found in Groq response");
-  return JSON.parse(jsonText);
 };
 
 const generateQuestionsViaProvider = async ({
