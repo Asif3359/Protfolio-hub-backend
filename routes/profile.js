@@ -5,6 +5,34 @@ const Profile = require("../model/Profile");
 const User = require("../model/User");
 const { body, validationResult } = require("express-validator");
 const authenticate = require("../middleware/authenticate");
+const multer = require("multer");
+const cloudinary = require("../utils/cloudinary");
+
+// Multer setup: store file in memory and restrict to images only
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image uploads are allowed"));
+    }
+    cb(null, true);
+  },
+});
+
+// Helper: upload buffer to Cloudinary via upload_stream
+const uploadBufferToCloudinary = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: "image" },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
+};
 
 // @route   GET /profile/me
 // @desc    Get current user's profile
@@ -30,6 +58,7 @@ router.get("/me", authenticate, async (req, res) => {
 router.post(
   "/",
   authenticate,
+  upload.single("profileImage"),
   [
     body("headline", "Headline is required").not().isEmpty(),
     body("bio", "Bio must be less than 1000 characters")
@@ -52,7 +81,6 @@ router.post(
       facebook,
       github,
       portfolioLink,
-      profileImage,
     } = req.body;
 
     // Build profile object
@@ -67,11 +95,22 @@ router.post(
       facebook,
       github,
       portfolioLink,
-      profileImage,
       updatedAt: Date.now(),
     };
 
     try {
+      // If a file is uploaded, send it to Cloudinary and set profileImage to the secure URL
+      if (req.file && req.file.buffer) {
+        const uploaded = await uploadBufferToCloudinary(
+          req.file.buffer,
+          `profiles/${req.user.id}`
+        );
+        profileFields.profileImage = uploaded.secure_url;
+      } else if (req.body.profileImage) {
+        // Fallback: accept direct URL if provided (e.g., already hosted)
+        profileFields.profileImage = req.body.profileImage;
+      }
+
       let profile = await Profile.findOne({ userId: req.user.id });
       let user = await User.findById(req.user.id);
 
