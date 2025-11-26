@@ -161,7 +161,7 @@ router.get("/email/:email", async (req, res) => {
 
     const [profile, projects, experiences, educations, certifications, achievements, researches, skills] = await Promise.all([
       Profile.findOne({ userId: user._id }),
-      Project.find({ userId: user._id }),
+      Project.find({ userId: user._id }).sort({ createdAt: -1 }),
       Experience.find({ userId: user._id }),
       Education.find({ userId: user._id }),
       Certification.find({ userId: user._id }),
@@ -212,7 +212,7 @@ router.get("/me", authenticate, async (req, res) => {
 
     const [profile, projects, experiences, educations, certifications, achievements, researches, skills] = await Promise.all([
       Profile.findOne({ userId }),
-      Project.find({ userId }),
+      Project.find({ userId }).sort({ createdAt: 1 }),
       Experience.find({ userId }),
       Education.find({ userId }),
       Certification.find({ userId }),
