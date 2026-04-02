@@ -124,7 +124,7 @@ router.post(
       console.error(err.message);
       res.status(500).send("Server Error");
     }
-  }
+  },
 );
 // @route   GET /experience/me
 // @desc    Get current user's experiences
@@ -220,7 +220,7 @@ router.put(
         visible,
       } = req.body;
 
-      // console.log(skills);  
+      // console.log(skills);
 
       // Process skills - handle both array and comma-separated string
       let processedSkills = [];
@@ -250,7 +250,7 @@ router.put(
       experience = await Experience.findByIdAndUpdate(
         req.params.exp_id,
         { $set: expFields },
-        { new: true }
+        { new: true },
       );
 
       res.json(experience);
@@ -258,7 +258,7 @@ router.put(
       console.error(err.message);
       res.status(500).send("Server Error");
     }
-  }
+  },
 );
 
 // @route   DELETE /experience/:exp_id
@@ -277,7 +277,7 @@ router.delete("/:exp_id", authenticate, async (req, res) => {
       return res.status(401).json({ msg: "User not authorized" });
     }
 
-    await experience.remove();
+    await experience.deleteOne();
     res.json({ msg: "Experience removed" });
   } catch (err) {
     console.error(err.message);
