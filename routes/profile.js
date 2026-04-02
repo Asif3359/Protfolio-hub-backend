@@ -28,7 +28,7 @@ const uploadBufferToCloudinary = (buffer, folder) => {
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
-      }
+      },
     );
     stream.end(buffer);
   });
@@ -103,7 +103,7 @@ router.post(
       if (req.file && req.file.buffer) {
         const uploaded = await uploadBufferToCloudinary(
           req.file.buffer,
-          `profiles/${req.user.id}`
+          `profiles/${req.user.id}`,
         );
         profileFields.profileImage = uploaded.secure_url;
       } else if (req.body.profileImage) {
@@ -119,7 +119,7 @@ router.post(
         profile = await Profile.findOneAndUpdate(
           { userId: req.user.id },
           { $set: profileFields },
-          { new: true }
+          { new: true },
         );
         return res.json(profile);
       }
@@ -134,7 +134,7 @@ router.post(
       console.error(err.message);
       res.status(500).send("Server Error");
     }
-  }
+  },
 );
 
 // @route   GET /profile/user/:user_id
@@ -166,7 +166,7 @@ router.put("/views/:user_id", async (req, res) => {
     const profile = await Profile.findOneAndUpdate(
       { userId: req.params.user_id },
       { $inc: { views: 1 } },
-      { new: true }
+      { new: true },
     );
 
     if (!profile) {
