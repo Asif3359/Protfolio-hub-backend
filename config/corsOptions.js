@@ -14,6 +14,7 @@ const corsOptions = {
       "https://protfolio-hub-backend.onrender.com",
       "https://portfolio-hub-frontend.vercel.app",
       "https://portfolio-hub-web.vercel.app",
+      "https://asifahammad.com",
       process.env.CLIENT_URL,
     ].filter(Boolean);
 
