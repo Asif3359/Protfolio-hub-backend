@@ -4,18 +4,18 @@
  * Module dependencies.
  */
 
-var app = require('../app');
-var debug = require('debug')('protfolio-hub:server');
-var http = require('http');
-var socketIo = require('socket.io');
-var SocketManager = require('../utils/socketManager');
+var app = require("../app");
+var debug = require("debug")("protfolio-hub:server");
+var http = require("http");
+var socketIo = require("socket.io");
+var SocketManager = require("../utils/socketManager");
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+var port = normalizePort(process.env.PORT || "3000");
+app.set("port", port);
 
 /**
  * Create HTTP server.
@@ -32,37 +32,36 @@ var io = socketIo(server, {
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
+
       const allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:5173',
-        'http://localhost:4173',
-        'https://protfolio-hub-backend.onrender.com',
-        'https://portfolio-hub-frontend.vercel.app',
-        process.env.CLIENT_URL
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://protfolio-hub-backend.onrender.com",
+        "https://portfolio-hub-web.vercel.app",
+        "https://asifahammad.com",
+        process.env.CLIENT_URL,
       ].filter(Boolean);
 
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        console.log('Socket.IO CORS blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
+        console.log("Socket.IO CORS blocked origin:", origin);
+        callback(new Error("Not allowed by CORS"));
       }
     },
     methods: ["GET", "POST"],
     credentials: true,
     allowedHeaders: [
-      'Origin',
-      'X-Requested-With',
-      'Content-Type',
-      'Accept',
-      'Authorization',
-      'Cache-Control',
-      'Pragma'
-    ]
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+      "Cache-Control",
+      "Pragma",
+    ],
   },
-  transports: ['websocket', 'polling'],
+  transports: ["websocket", "polling"],
   allowEIO3: true,
   pingTimeout: 60000,
   pingInterval: 25000,
@@ -71,7 +70,7 @@ var io = socketIo(server, {
   allowRequest: (req, callback) => {
     // Additional request validation if needed
     callback(null, true);
-  }
+  },
 });
 
 // Initialize Socket Manager
@@ -81,12 +80,12 @@ var socketManager = new SocketManager(io);
 global.socketManager = socketManager;
 
 // Handle Socket.IO connection errors
-io.on('connect_error', (error) => {
-  console.error('Socket.IO connection error:', error);
+io.on("connect_error", (error) => {
+  console.error("Socket.IO connection error:", error);
 });
 
-io.on('connect_timeout', (timeout) => {
-  console.error('Socket.IO connection timeout:', timeout);
+io.on("connect_timeout", (timeout) => {
+  console.error("Socket.IO connection timeout:", timeout);
 });
 
 /**
@@ -94,8 +93,8 @@ io.on('connect_timeout', (timeout) => {
  */
 
 server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+server.on("error", onError);
+server.on("listening", onListening);
 
 /**
  * Normalize a port into a number, string, or false.
@@ -122,22 +121,20 @@ function normalizePort(val) {
  */
 
 function onError(error) {
-  if (error.syscall !== 'listen') {
+  if (error.syscall !== "listen") {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+    case "EACCES":
+      console.error(bind + " requires elevated privileges");
       process.exit(1);
       break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+    case "EADDRINUSE":
+      console.error(bind + " is already in use");
       process.exit(1);
       break;
     default:
@@ -151,35 +148,37 @@ function onError(error) {
 
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
-  console.log('🚀 Server running on ' + bind);
-  console.log('💬 WebSocket server initialized');
-  console.log('📡 Socket.IO CORS enabled for:', [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:5173',
-    'http://localhost:4173',
-    'https://portfolio-hub-frontend.vercel.app',
-    'https://protfolio-hub-backend.onrender.com'
-  ].join(', '));
+  var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+  debug("Listening on " + bind);
+  console.log("🚀 Server running on " + bind);
+  console.log("💬 WebSocket server initialized");
+  console.log(
+    "📡 Socket.IO CORS enabled for:",
+    [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:5173",
+      "http://localhost:4173",
+      "https://portfolio-hub-web.vercel.app",
+      "https://protfolio-hub-backend.onrender.com",
+      "https://asifahammad.com",
+    ].join(", "),
+  );
 }
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down gracefully");
   server.close(() => {
-    console.log('Process terminated');
+    console.log("Process terminated");
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
+process.on("SIGINT", () => {
+  console.log("SIGINT received, shutting down gracefully");
   server.close(() => {
-    console.log('Process terminated');
+    console.log("Process terminated");
     process.exit(0);
   });
 });
