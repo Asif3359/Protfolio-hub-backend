@@ -9,10 +9,7 @@ const corsOptions = {
     const allowedOrigins = [
       "http://localhost:3000",
       "http://localhost:3001",
-      "http://localhost:5173",
-      "http://localhost:4173",
       "https://protfolio-hub-backend.onrender.com",
-      "https://portfolio-hub-frontend.vercel.app",
       "https://portfolio-hub-web.vercel.app",
       "https://asifahammad.com",
       process.env.CLIENT_URL,
