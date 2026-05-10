@@ -4,10 +4,13 @@ const User = require("../model/User");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const authenticate = require("../middleware/authenticate");
 const UserStatusManager = require("../utils/userStatusManager");
+const { Resend } = require("resend");
+
+// Initialize Resend with your API key from .env
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Input validation middleware
 const validateSignup = [
@@ -33,29 +36,32 @@ const generateToken = (user) => {
       },
     },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || "1h" }
+    { expiresIn: process.env.JWT_EXPIRE || "1h" },
   );
 };
 
-// Helper function to send email
+// Helper function to send email using Resend
 const sendEmail = async (options) => {
-  const transporter = nodemailer.createTransport({
-    service: "Gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS.trim(),
-    },
-  });
+  const { email, subject, message, html } = options;
 
-  const mailOptions = {
-    from: `"markaz-al-mahfaza" <${process.env.EMAIL_USER}>`,
-    to: options.email,
-    subject: options.subject,
-    text: options.message,
-    html: options.html,
+  // Resend requires at least html or text.
+  // We'll use html if provided, otherwise fallback to plain text.
+  const emailPayload = {
+    from: process.env.EMAIL_FROM || "onboarding@resend.dev", // Must be a verified sender in Resend
+    to: email,
+    subject: subject,
+    html: html || `<p>${message}</p>`, // convert plain message to simple html if needed
+    text: message, // plain text fallback
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    const response = await resend.emails.send(emailPayload);
+    console.log(`Email sent to ${email} | Resend ID: ${response.id}`);
+    return response;
+  } catch (error) {
+    console.error("Resend email error:", error);
+    throw new Error("Failed to send email");
+  }
 };
 
 // @route   POST /api/auth/signup
@@ -102,7 +108,6 @@ router.post("/signup", validateSignup, async (req, res) => {
     await user.save();
 
     // Send verification email
-    // In your signup route, modify the verification email part:
     const verificationUrl = `${process.env.BACKEND_VERIFY_EMAIL_URL}${verificationToken}`;
 
     await sendEmail({
@@ -193,7 +198,7 @@ router.post("/login", validateLogin, async (req, res) => {
     const token = jwt.sign(
       { user: { id: user.id, role: user.role } },
       process.env.JWT_SECRET,
-      { expiresIn }
+      { expiresIn },
     );
 
     // Set cookie if needed
@@ -222,7 +227,6 @@ router.post("/login", validateLogin, async (req, res) => {
   }
 });
 
-// Add this to your authRoutes.js
 // @route   GET /api/auth/verify-email/:token
 // @desc    Verify email via link
 // @access  Public
@@ -517,7 +521,7 @@ router.post("/update-status", authenticate, async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
     user.isOnline = true;
@@ -529,14 +533,14 @@ router.post("/update-status", authenticate, async (req, res) => {
       message: "Status updated successfully",
       data: {
         isOnline: user.isOnline,
-        lastSeenAt: user.lastSeenAt
-      }
+        lastSeenAt: user.lastSeenAt,
+      },
     });
   } catch (err) {
     console.error("Status update error:", err);
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
 });
@@ -550,19 +554,19 @@ router.get("/user-status/me", authenticate, async (req, res) => {
     if (!userStatus) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     res.json({
       success: true,
-      data: userStatus
+      data: userStatus,
     });
   } catch (err) {
     console.error("Get user status error:", err);
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
 });
@@ -573,24 +577,24 @@ router.get("/user-status/me", authenticate, async (req, res) => {
 router.get("/user-status/:userId", authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     const userStatus = await UserStatusManager.getUserStatus(userId);
     if (!userStatus) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     res.json({
       success: true,
-      data: userStatus
+      data: userStatus,
     });
   } catch (err) {
     console.error("Get user status error:", err);
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
 });
@@ -601,26 +605,28 @@ router.get("/user-status/:userId", authenticate, async (req, res) => {
 router.get("/online-users", authenticate, async (req, res) => {
   try {
     // Check if user is admin
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Admin only."
+        message: "Access denied. Admin only.",
       });
     }
 
     const allUsersStatus = await UserStatusManager.getAllUsersStatus();
-    const onlineUsers = allUsersStatus.filter(user => user.status === 'online' || user.status === 'away');
+    const onlineUsers = allUsersStatus.filter(
+      (user) => user.status === "online" || user.status === "away",
+    );
 
     res.json({
       success: true,
       count: onlineUsers.length,
-      data: onlineUsers
+      data: onlineUsers,
     });
   } catch (err) {
     console.error("Get online users error:", err);
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
 });
@@ -631,10 +637,10 @@ router.get("/online-users", authenticate, async (req, res) => {
 router.get("/all-users-status", authenticate, async (req, res) => {
   try {
     // Check if user is admin
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Admin only."
+        message: "Access denied. Admin only.",
       });
     }
 
@@ -643,13 +649,13 @@ router.get("/all-users-status", authenticate, async (req, res) => {
     res.json({
       success: true,
       count: allUsersStatus.length,
-      data: allUsersStatus
+      data: allUsersStatus,
     });
   } catch (err) {
     console.error("Get all users status error:", err);
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
 });
@@ -665,17 +671,19 @@ router.post("/check-verification", async (req, res) => {
 
     // Check if user exists
     const user = await User.findOne({ email });
-    // if (!user) {
-    //   return res.status(404).json({ message: "User not found" });
-    // }
 
     // Check verification status
     if (user.verified) {
-      return res.status(200).json({ verified: true, user: user, message: "Email is verified" });
+      return res
+        .status(200)
+        .json({ verified: true, user: user, message: "Email is verified" });
     } else {
-      return res.status(200).json({ verified: false, user:user, message: "Email is not verified" });
+      return res.status(200).json({
+        verified: false,
+        user: user,
+        message: "Email is not verified",
+      });
     }
-    
   } catch (err) {
     console.error("Error checking verification:", err);
     res.status(500).json({ message: "Server error" });
@@ -689,10 +697,10 @@ router.post("/verify-token", async (req, res) => {
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "No token provided"
+        message: "No token provided",
       });
     }
 
@@ -700,14 +708,14 @@ router.post("/verify-token", async (req, res) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Get user from database
-    const user = await User.findById(decoded.user.id).select('-password');
-    
+    const user = await User.findById(decoded.user.id).select("-password");
+
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
@@ -715,7 +723,7 @@ router.post("/verify-token", async (req, res) => {
     if (!user.verified) {
       return res.status(403).json({
         success: false,
-        message: "Email not verified"
+        message: "Email not verified",
       });
     }
 
@@ -726,34 +734,31 @@ router.post("/verify-token", async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        verified: user.verified
-      }
+        verified: user.verified,
+      },
     });
-
   } catch (err) {
     console.error("Token verification error:", err);
-    
-    if (err.name === 'JsonWebTokenError') {
+
+    if (err.name === "JsonWebTokenError") {
       return res.status(401).json({
         success: false,
-        message: "Invalid token"
+        message: "Invalid token",
       });
     }
-    
-    if (err.name === 'TokenExpiredError') {
+
+    if (err.name === "TokenExpiredError") {
       return res.status(401).json({
         success: false,
-        message: "Token expired"
+        message: "Token expired",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error",
     });
   }
 });
 
-
 module.exports = router;
-
