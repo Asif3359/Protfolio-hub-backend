@@ -1,9 +1,10 @@
 // routes/verificationRoutes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 // Verification Success Page
-router.get('/verification-success', (req, res) => {
+router.get("/verification-success", (req, res) => {
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:3001";
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -29,7 +30,7 @@ router.get('/verification-success', (req, res) => {
         <div class="card-body">
           <h1 class="card-title">Email Verified Successfully!</h1>
           <p class="card-text">Thank you for verifying your email address. Your account is now fully activated.</p>
-          <a href="http://localhost:3001/auth/login" class="btn btn-primary mt-3">Continue to Login</a>
+          <a href="${clientUrl}/auth/login" class="btn btn-primary mt-3">Continue to Login</a>
         </div>
       </div>
     </body>
@@ -38,7 +39,8 @@ router.get('/verification-success', (req, res) => {
 });
 
 // Verification Error Page
-router.get('/verification-error', (req, res) => {
+router.get("/verification-error", (req, res) => {
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:3001";
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -65,7 +67,7 @@ router.get('/verification-error', (req, res) => {
           <h1 class="card-title text-danger">Verification Failed</h1>
           <p class="card-text">The verification link is invalid or has expired.</p>
           <p class="card-text">Please request a new verification email from your account settings.</p>
-          <a class="btn btn-primary mt-3">Return to Login</a>
+          <a href="${clientUrl}/auth/login" class="btn btn-primary mt-3">Return to Login</a>
         </div>
       </div>
     </body>
